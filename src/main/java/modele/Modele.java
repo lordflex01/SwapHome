@@ -16,7 +16,7 @@ import controleur.DemandeRecu;
 import controleur.VueLogement;
 
 public class Modele {
-	private static Bdd uneBdd = new Bdd("localhost", "swapehome_chi", "root", "root");
+	private static Bdd uneBdd = new Bdd("localhost", "swapehome", "root", "root");
 	
 	public static ArrayList<Pays> selectAllPays()
 	{
