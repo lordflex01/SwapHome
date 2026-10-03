@@ -1,13 +1,12 @@
 com/swaphome/controleur/Localite.class
 com/swaphome/controleur/Echanger.class
 com/swaphome/controleur/Pays.class
-com/swaphome/controleur/User.class
 com/swaphome/modele/Modele.class
-com/swaphome/modele/Bdd.class
 com/swaphome/controleur/Proprietaire.class
 com/swaphome/controleur/DemandeRecu.class
 com/swaphome/SwapHomeApplication.class
 com/swaphome/controleur/TypeLogement.class
 com/swaphome/controleur/VueLogement.class
+com/swaphome/controleur/UserController.class
 com/swaphome/controleur/Controleur.class
 com/swaphome/controleur/Logement.class

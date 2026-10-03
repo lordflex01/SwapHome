@@ -2,7 +2,7 @@
 
 Application web d'échange de logements (type "home swap") permettant à des utilisateurs de s'inscrire comme propriétaires, de publier des logements disponibles à l'échange, et d'envoyer/recevoir des demandes d'échange avec d'autres propriétaires.
 
-> ## Projet réalisé en 2022-2023 dans le cadre d'un exercice/projet d'apprentissage Java EE. Ce README documente l'état actuel du code avant une phase de modernisation.
+> ## Projet réalisé en 2022-2023 dans le cadre d'un exercice/projet d'apprentissage Java EE, en cours de modernisation.
 
 ## Fonctionnalités
 
@@ -13,13 +13,13 @@ Application web d'échange de logements (type "home swap") permettant à des uti
 - Envoi et réception de demandes d'échange entre propriétaires (`Echanger`, `DemandeRecu`)
 - Espace administrateur (`homeadmin.jsp`)
 
-## Stack technique (état actuel)
+## Stack technique
 
-- **Langage** : Java (JDK, projet Eclipse "Dynamic Web Project" — pas de Maven/Gradle)
+- **Langage** : Java 17 et Maven
 - **Vue** : JSP avec scriptlets Java (pas de Servlet dédié, pas de JSTL/EL)
-- **Accès données** : JDBC brut (`java.sql.Statement`), pas d'ORM
+- **Accès données** : Spring JDBC (`JdbcTemplate`) avec requêtes paramétrées et pool de connexions Spring Boot
 - **Base de données** : MySQL (schéma dans `src/main/sql/swaphome.sql`)
-- **Driver JDBC** : `com.mysql.jdbc.Driver` (ancien driver, déprécié)
+- **Driver JDBC** : MySQL Connector/J (`com.mysql.cj.jdbc.Driver`)
 
 ## Architecture
 
@@ -29,8 +29,7 @@ src/main/java/
 │                         # TypeLogement, Proprietaire, Echanger, DemandeRecu)
 │   └── Controleur.java   # Point d'entrée appelé depuis les JSP, délègue tout à Modele
 └── modele/
-    ├── Bdd.java          # Gestion de la connexion JDBC (ouverture/fermeture à la demande)
-    └── Modele.java       # Toutes les requêtes SQL (CRUD), construites par concaténation de chaînes
+    └── Modele.java       # Requêtes SQL paramétrées via JdbcTemplate
 
 src/main/webapp/
 ├── vue/                  # JSP avec scriptlets Java (accès direct à Controleur.*)
@@ -41,7 +40,7 @@ src/main/sql/
 └── swaphome.sql          # Script de création du schéma MySQL + données de test
 ```
 
-**Flux d'une requête** : JSP (scriptlet) → `Controleur` (façade statique, pas de logique) → `Modele` (construit et exécute le SQL) → `Bdd` (connexion JDBC ouverte/fermée à chaque appel).
+**Flux d'une requête** : JSP (scriptlet) → `Controleur` (façade statique conservée) → `Modele` → `JdbcTemplate` et le pool de connexions Spring Boot.
 
 Il n'y a pas de vrai Servlet-Controller ni de séparation MVC stricte : les JSP contiennent directement la logique de contrôle (lecture des paramètres de requête, redirection, gestion de session).
 
@@ -56,33 +55,30 @@ Tables principales (voir `swaphome.sql`) :
 - `logement` — logements publiés (rattachés à un propriétaire, une localité, un type)
 - `echanger` / `demande_recu` — demandes d'échange entre propriétaires
 
-## Lancer le projet en local (état actuel)
+## Lancer le projet en local
 
-Prérequis : JDK 8+, un serveur d'application Java EE (Tomcat), MySQL, Eclipse (ou IDE équivalent avec support Dynamic Web Project).
+Prérequis : JDK 17, Maven et MySQL.
 
 1. Créer la base de données à partir de `src/main/sql/swaphome.sql`.
-2. Adapter les identifiants de connexion dans `Modele.java` (`new Bdd("localhost", "swapehome_chi", "root", "root")`) — ⚠️ actuellement en dur dans le code, voir section "Points d'attention" ci-dessous.
-3. Importer le projet dans Eclipse (`.project` / `.classpath` fournis) et le déployer sur Tomcat.
-4. Accéder à `connexion.jsp` pour se connecter, ou `inscription.jsp` pour créer un compte.
+2. Définir `DATABASE_URL` (par exemple `jdbc:mysql://localhost:3306/swapehome`), `DATABASE_USERNAME` et `DATABASE_PASSWORD` dans l'environnement.
+3. Lancer avec `mvn spring-boot:run` ou construire le WAR avec `mvn package`.
+4. Accéder à `/connexion.jsp` pour se connecter, ou `/inscription.jsp` pour créer un compte.
 
-## Points d'attention avant modernisation
+## Points à traiter ensuite
 
 Cette section liste les problèmes identifiés dans le code existant, à traiter en priorité lors de la refonte :
 
-- **Injections SQL** : toutes les requêtes sont construites par concaténation de chaînes avec `Statement` (pas de `PreparedStatement`), y compris sur le formulaire de connexion.
 - **Mots de passe en clair** : stockés et comparés sans hachage.
-- **Identifiants de base de données en dur** dans le code source (`root`/`root`), et incohérence de nom de base entre le code (`swapehome_chi`) et le script SQL (`swapehome`).
-- **Driver JDBC obsolète** (`com.mysql.jdbc.Driver`).
-- **Pas de pool de connexions** : une connexion ouverte/fermée à chaque requête, sans `try-with-resources`.
-- **Gestion d'erreurs minimale** : erreurs simplement imprimées en console (`System.out.println`), pas de logging structuré.
-- **Pas de tests automatisés, pas de build tool** (Maven/Gradle), ce qui complique l'intégration continue.
+- **Schéma fourni incomplet ou divergent** : `swaphome.sql` n'inclut pas `echanger`, `demande_recu` ni la vue `VueLogement`. Il définit aussi `logement.iduser`, alors que les requêtes historiques utilisent `idproprietaire`. Le schéma utilisé en déploiement doit être aligné avant exécution de ces fonctions.
+- **Architecture de présentation ancienne** : les JSP/scriptlets et la façade `Controleur` statique restent à migrer.
+- **Gestion d'erreurs minimale** : prévoir un traitement applicatif et une journalisation structurés.
 
 ## Roadmap de modernisation (proposée)
 
 - [x] Migration vers Maven/Gradle pour la gestion des dépendances et le build
-- [ ] Migration vers Spring Boot + Spring Data JPA (ou équivalent) pour éliminer le SQL concaténé
+- [x] Migration vers Spring Boot + Spring JDBC pour éliminer le SQL concaténé
 - [ ] Hachage des mots de passe (BCrypt) + migration des comptes existants
-- [ ] Externalisation de la configuration (variables d'environnement / `application.yml`)
+- [x] Externalisation des identifiants de connexion via variables d'environnement
 - [ ] Ajout de tests unitaires et d'intégration
 - [ ] Remplacement des JSP/scriptlets par une couche de présentation moderne (Thymeleaf ou API REST + frontend séparé)
 
