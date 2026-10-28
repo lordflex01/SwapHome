@@ -1,6 +1,6 @@
-package controleur;
+package com.swaphome.controleur;
 import java.util.ArrayList;
-import modele.Modele;
+import com.swaphome.modele.Modele;
 
 public class Controleur {
 	//PAYS
@@ -81,7 +81,7 @@ public class Controleur {
 	}
 	
 	//USER
-	public static void insertUser (User unUser)
+	public static void insertUser (UserController unUser)
 	{
 		
 		Modele.insertUser(unUser);
@@ -91,12 +91,12 @@ public class Controleur {
 		
 		Modele.insertProprietaire(unProprietaire);
 	}
-	public static User selectWhereIdUser(String login, String mdp)
+	public static UserController selectWhereIdUser(String login, String mdp)
 	{
 		return Modele.selectWhereIdUser(login, mdp);
 	}
 	
-	public static User selectWhereLoginUser(String login, String mdp)
+	public static UserController selectWhereLoginUser(String login, String mdp)
 	{
 		return Modele.selectWhereLoginUser(login, mdp);
 	}

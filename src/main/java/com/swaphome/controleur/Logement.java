@@ -1,4 +1,4 @@
-package controleur;
+package com.swaphome.controleur;
 
 public class Logement {
 	private int idlogement,codelocalite,codetypelogement,idproprietaire;

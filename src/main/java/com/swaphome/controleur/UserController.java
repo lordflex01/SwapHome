@@ -1,9 +1,9 @@
-package controleur;
+package com.swaphome.controleur;
 
-public class User {
+public class UserController {
 	protected int iduser;
 	protected String nom, prenom, adresse, email, tel, cp, ville, login, mdp;
-	public User(int iduser, String nom, String prenom, String adresse, String email, String tel, String cp,
+	public UserController(int iduser, String nom, String prenom, String adresse, String email, String tel, String cp,
 			String ville, String login, String mdp) {
 		super();
 		this.iduser = iduser;
@@ -18,7 +18,7 @@ public class User {
 		this.mdp = mdp;
 	}
 	
-	public User(String nom, String prenom, String adresse, String email, String tel, String cp,
+	public UserController(String nom, String prenom, String adresse, String email, String tel, String cp,
 			String ville, String login, String mdp) {
 		super();
 		this.iduser = 0;

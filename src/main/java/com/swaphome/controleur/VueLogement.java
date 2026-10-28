@@ -1,4 +1,4 @@
-package controleur;
+package com.swaphome.controleur;
 
 public class VueLogement {
 	private int idlogement,idproprietaire;
